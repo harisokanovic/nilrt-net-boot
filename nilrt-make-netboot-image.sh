@@ -58,22 +58,6 @@ else
 fi
 }
 
-readonly TEMP_DIR=$(mktemp -d "/tmp/netboot-temp-XXXXXXX")
-chmod 0700 "$TEMP_DIR"
-
-function cleanup()
-{
-    local exitCode="$?"
-    set +e
-
-    status "Cleanup TEMP_DIR=$TEMP_DIR"
-    rm -Rf "$TEMP_DIR"
-
-    exit "$exitCode"
-}
-
-trap cleanup EXIT
-
 image_dir=""
 sysroot_dir=""
 kernel_img_file=""
@@ -109,6 +93,23 @@ else
         error "No kernel image found at \"$sysroot_dir/boot/runmode/bzImage\" nor \"/boot/runmode/bzImage\", must specify with -k"
     fi
 fi
+
+
+readonly TEMP_DIR=$(mktemp -d "/tmp/netboot-temp-XXXXXXX")
+chmod 0700 "$TEMP_DIR"
+
+function cleanup()
+{
+    local exitCode="$?"
+    set +e
+
+    status "Cleanup TEMP_DIR=$TEMP_DIR"
+    rm -Rf "$TEMP_DIR"
+
+    exit "$exitCode"
+}
+
+trap cleanup EXIT
 
 
 status "Clearing $image_dir"
