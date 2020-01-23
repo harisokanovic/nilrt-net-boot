@@ -23,8 +23,10 @@ function print_help_and_exit () {
     cat <<ENDHELP
 
 Usage: $0 -i /mnt/userfs -o /media/my_usb_storage/nilrt-image.dir [ -k /mnt/userfs/boot/runmode/bzImage ]
- Creates a PXE bootable image of NI Linux RT system, containing a kernel
- image and inital RAM disk (initrd) image of runmode filesystem.
+ Creates a PXE bootable image of an NI Linux RT system. This image is a
+ direcotry containing the runmode kernel and an inital RAM disk (initrd)
+ image of it's runmode filesystem, with identity information (like
+ hostname, network config, ssh keys, certificates, etc) stripped out.
 
 Args:
  -i: Path to root filesystem of directory NI Linux RT runmode which
