@@ -1,6 +1,17 @@
-# nilrt-net-boot
+# nilrt-net-boot - NI Linux RT Network Boot Tools
 
-Tools for network booting NI Linux RT.
+Network booting is the process of booting a computer system from a
+network rather than local disk/flash media. The system's kernel and file
+systems are retrieved over the network by firmware/BIOS instead of
+accessing those files from local storage. In many cases, storage devices
+can be completely removed from these systems to reduce cost. These
+schemes are typically employed to centralize software and system
+configuration to reduce maintenance overhead.
+
+Preboot Execution Environment (PXE) is a common protocol to implement
+network boot. It's supported on some NI controllers like PXIe-8840.
+The tutorial below demonstrates PXE network booting an NI Linux RT OS
+with user installed software (E.g. LabVIEW RT built app) on PXI.
 
 Written by Haris Okanovic <haris.okanovic@ni.com> to demonstrate
 network boot capabilities of NI Linux RT. Use at your own risk.
