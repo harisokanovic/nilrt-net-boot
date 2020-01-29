@@ -1,4 +1,4 @@
-# nilrt-net-boot - NI Linux RT Network Boot Tools
+# nilrt-net-boot: NI Linux RT Network Boot Tools
 
 Network booting is the process of booting a computer system from a
 network rather than local disk/flash media. The system's kernel and file
@@ -62,6 +62,7 @@ tftpboot/
 NOTE: You can compile your own Syslinux PXE boot loader if desired.
 
 Syslinux PXE Documentation: https://wiki.syslinux.org/wiki/index.php?title=PXELINUX
+
 Syslinux Source: https://mirrors.edge.kernel.org/pub/linux/utils/boot/syslinux/
 
 
