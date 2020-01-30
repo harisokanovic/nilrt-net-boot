@@ -36,16 +36,19 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 3. Copy the enclosed nilrt-make-netboot-image.sh to admin's home
    directory via ssh/sftp.
 
-4. Run `nilrt-make-netboot-image.sh -i /mnt/userfs -o /media/my_usb_storage/img.d`
-   as admin to take an image to /media/my_usb_storage/nilrt-image.dir .
+4. Run `nilrt-make-netboot-image.sh -i /mnt/userfs -o /path/to/img.d`
+   as admin to take an image. Substitute `/path/to/img.d` with any
+   secondary storage device that's big enough to store the image. E.g.
+   This could be a USB mass storage device or a network share.
 
-5. Copy `img.d` into the enclosed `tftpboot`, which contains a few other
-   files needed for PXE boot.
+5. Copy `img.d` into the enclosed `tftpboot` directory on your desktop.
+   This directory contains other files needed for PXE boot. The layout
+   is documented below for reference.
 
 
 ## TFTP Root Directory Layout
 
-Once `img.d` is copied, the `tftpboot` dir should look like this:
+The `tftpboot` directory should look like this after `img.d` is copied:
 
 ```
 tftpboot/
@@ -55,8 +58,8 @@ tftpboot/
         SHA256SUM - checksums of aforementioned files
     pxelinux.cfg/
         default - PXE configuration file tuned for NI Linux RT
-    pxelinux.0 - x86_64 Syslinux PXE boot loader
-    ldlinux.c32 - x86_64 Syslinux PXE boot loader
+    pxelinux.0 - x86_64 Syslinux PXE boot loader (binary)
+    ldlinux.c32 - x86_64 Syslinux PXE boot loader (binary)
 ```
 
 NOTE: You can compile your own Syslinux PXE boot loader if desired.
