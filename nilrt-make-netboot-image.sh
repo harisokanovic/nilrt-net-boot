@@ -37,6 +37,12 @@ Args:
  -k: (Optional) Path to kernel image. Defaults to /boot/runmode/bzImage
      under the sysroot. This must be an absolute path beginning with
      '/' if specified.
+ -b  (Optional) Files and directories to blacklist - exclude from image.
+     You can pass this parameter multiple times. '*' is wildcard, which
+     matches anything. E.g. Passing '-b foo.txt -b bar.dir -b gaz.dir/*'
+     excludes the file /foo.txt, /bar.dir but NOT it's contents, and
+     /gaz.dir's contents but NOT /gaz.dir itself. Paths are relative to
+     the specified root filesystem (-i option).
 
 Written by Haris Okanovic <haris.okanovic@ni.com> to demonstrate
 network boot capabilities of NI Linux RT. Use at your own risk.
@@ -63,13 +69,15 @@ fi
 image_dir=""
 sysroot_dir=""
 kernel_img_file=""
+blacklist_paths=()
 
-while getopts "ho:i:k:" opt; do
+while getopts "ho:i:k:b:" opt; do
     case "$opt" in
     h )  print_help_and_exit ;;
     o )  image_dir="$OPTARG" ;;
     i )  sysroot_dir="$OPTARG" ;;
     k )  kernel_img_file="$OPTARG" ;;
+    b )  blacklist_paths+=( "$OPTARG" )
     esac
 done
 shift $(($OPTIND - 1))
@@ -95,6 +103,18 @@ else
         error "No kernel image found at \"$sysroot_dir/boot/runmode/bzImage\" nor \"/boot/runmode/bzImage\", must specify with -k"
     fi
 fi
+
+
+find_blacklist_exclude=""
+for i in ${!blacklist_paths[@]}; do
+    path="${blacklist_paths[i]}"
+    [ "${path:0:1}" != "/" ] || print_help_and_exit "Blacklist path=$path must be relative to root filesystem, must not start with /"
+
+    # Relative to sysroot_dir
+    path="./$path"
+
+    find_blacklist_exclude="$find_blacklist_exclude -a -not -path $path"
+done
 
 
 readonly TEMP_DIR=$(mktemp -d "/tmp/netboot-temp-XXXXXXX")
@@ -131,18 +151,22 @@ cd "$sysroot_dir" >/dev/null
         -a -not -path "./etc/hostname" \
         -a -not -path "./etc/init.d/niopendisks" \
         -a -not -path "./etc/init.d/niclosedisks" \
+        $find_blacklist_exclude \
         -print
 
-    find "./etc/natinst/share" -xdev \
-           -not -path "./etc/natinst/share/ni-rt.ini" \
-        -a -not -path "./etc/natinst/share/random-seed" \
-        -a -not -path "./etc/natinst/share/ssh/*" \
-        -a -not -path "./etc/natinst/share/certstore/open_csrs/*" \
-        -a -not -path "./etc/natinst/share/certstore/server_certs/*" \
-        -a -not -path "./etc/natinst/share/certstore/temp/*" \
-        -a -not -path "./etc/natinst/share/certstore/certstore/wireless/client/*" \
-        -a -not -path "./etc/natinst/share/certstore/certstore/wireless/pac/*" \
-        -print
+    if [  -e "./etc/natinst/share"  ]; then
+        find "./etc/natinst/share" -xdev \
+               -not -path "./etc/natinst/share/ni-rt.ini" \
+            -a -not -path "./etc/natinst/share/random-seed" \
+            -a -not -path "./etc/natinst/share/ssh/*" \
+            -a -not -path "./etc/natinst/share/certstore/open_csrs/*" \
+            -a -not -path "./etc/natinst/share/certstore/server_certs/*" \
+            -a -not -path "./etc/natinst/share/certstore/temp/*" \
+            -a -not -path "./etc/natinst/share/certstore/certstore/wireless/client/*" \
+            -a -not -path "./etc/natinst/share/certstore/certstore/wireless/pac/*" \
+            $find_blacklist_exclude \
+            -print
+    fi
 
 ) | cpio --quiet -H newc -o | gzip -9 -n > "$image_dir/init"
 cd - >/dev/null
@@ -154,18 +178,22 @@ mkdir -m 0755 "$OVR_DIR"
 
 ln -sf "sbin/init" "$OVR_DIR/init"
 
-mkdir -m 0755 "$OVR_DIR/etc"
-sed "/^LABEL=/d; /^\/dev\//d" "$sysroot_dir/etc/fstab" > "$OVR_DIR/etc/fstab"
-chmod 0644 "$OVR_DIR/etc/fstab"
+if [ -e "$sysroot_dir/etc/fstab" ]; then
+    mkdir -m 0755 "$OVR_DIR/etc"
+    sed "/^LABEL=/d; /^\/dev\//d" "$sysroot_dir/etc/fstab" > "$OVR_DIR/etc/fstab"
+    chmod 0644 "$OVR_DIR/etc/fstab"
+fi
 
-mkdir -m 0755 "$OVR_DIR/etc/natinst"
-mkdir -m 0755 "$OVR_DIR/etc/natinst/share"
-sed "/^PrimaryMAC=/d; /^host_name=/d" "$sysroot_dir/etc/natinst/share/ni-rt.ini" > "$OVR_DIR/etc/natinst/share/ni-rt.ini"
+if [ -e "$sysroot_dir/etc/natinst/share/ni-rt.ini" ]; then
+    mkdir -m 0755 "$OVR_DIR/etc/natinst"
+    mkdir -m 0755 "$OVR_DIR/etc/natinst/share"
+    sed "/^PrimaryMAC=/d; /^host_name=/d" "$sysroot_dir/etc/natinst/share/ni-rt.ini" > "$OVR_DIR/etc/natinst/share/ni-rt.ini"
+fi
 
 
 status "Appending $OVR_DIR to init"
 cd "$OVR_DIR" >/dev/null
-find "." -xdev -print | cpio --quiet -H newc -o | gzip -9 -n >> "$image_dir/init"
+find "." -xdev $find_blacklist_exclude -print | cpio --quiet -H newc -o | gzip -9 -n >> "$image_dir/init"
 cd - >/dev/null
 
 
