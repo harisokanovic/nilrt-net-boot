@@ -105,7 +105,7 @@ else
 fi
 
 
-find_blacklist_exclude=""
+find_blacklist_exclude=()
 for i in ${!blacklist_paths[@]}; do
     path="${blacklist_paths[i]}"
     [ "${path:0:1}" != "/" ] || print_help_and_exit "Blacklist path=$path must be relative to root filesystem, must not start with /"
@@ -113,7 +113,7 @@ for i in ${!blacklist_paths[@]}; do
     # Relative to sysroot_dir
     path="./$path"
 
-    find_blacklist_exclude="$find_blacklist_exclude -a -not -path $path"
+    find_blacklist_exclude+=( "-a" "-not" "-path" "$path" )
 done
 
 
@@ -151,7 +151,7 @@ cd "$sysroot_dir" >/dev/null
         -a -not -path "./etc/hostname" \
         -a -not -path "./etc/init.d/niopendisks" \
         -a -not -path "./etc/init.d/niclosedisks" \
-        $find_blacklist_exclude \
+        "${find_blacklist_exclude[@]}" \
         -print
 
     if [  -e "./etc/natinst/share"  ]; then
@@ -164,7 +164,7 @@ cd "$sysroot_dir" >/dev/null
             -a -not -path "./etc/natinst/share/certstore/temp/*" \
             -a -not -path "./etc/natinst/share/certstore/certstore/wireless/client/*" \
             -a -not -path "./etc/natinst/share/certstore/certstore/wireless/pac/*" \
-            $find_blacklist_exclude \
+            "${find_blacklist_exclude[@]}" \
             -print
     fi
 
@@ -193,7 +193,7 @@ fi
 
 status "Appending $OVR_DIR to init"
 cd "$OVR_DIR" >/dev/null
-find "." -xdev $find_blacklist_exclude -print | cpio --quiet -H newc -o | gzip -9 -n >> "$image_dir/init"
+find "." -xdev "${find_blacklist_exclude[@]}" -print | cpio --quiet -H newc -o | gzip -9 -n >> "$image_dir/init"
 cd - >/dev/null
 
 
