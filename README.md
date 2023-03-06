@@ -13,8 +13,10 @@ network boot. It's supported on some NI controllers like PXIe-8840.
 The tutorial below demonstrates PXE network booting an NI Linux RT OS
 with user installed software (E.g. LabVIEW RT built app) on PXI.
 
-Written by Haris Okanovic <haris.okanovic@ni.com> to demonstrate
-network boot capabilities of NI Linux RT. Use at your own risk.
+Written by Haris Okanovic to demonstrate network boot capabilities
+of NI Linux RT. Use at your own risk.
+
+**Note:** NI does not support network boot in real time operating systems.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
